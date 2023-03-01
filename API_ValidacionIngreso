@@ -1,0 +1,181 @@
+internal string API_ValidacionIngreso(string ConexionBase, string Parametros)
+        {
+            var strExcepcion = string.Empty;
+
+            var pruebas = false;
+            var compania = -1;
+            var folio = "";
+            var fotos = 2;
+
+            var ListaParametros = Parametros.Split('^').ToList();
+
+            if (!ListaParametros.Any())
+            {
+                strExcepcion = "Empty/Invalid parameters";
+                return $"{strExcepcion}^";
+            }
+
+            for (int i = 0; i < ListaParametros.Count; i++)
+            {
+                switch (i)
+                {
+                    case 0:
+                        pruebas = Comun.EvaluaSiNo(ListaParametros[i]);
+                        break;
+                    case 1:
+                        if (!int.TryParse(ListaParametros[i], out compania) || compania <= 0)
+                        {
+                            strExcepcion = "Invalid company number.";
+                            return $"{strExcepcion}^[]";
+                        }
+                        break;
+                    case 2:
+                        if (string.IsNullOrEmpty(ListaParametros[i]))
+                        {
+                            strExcepcion = "Invalid ward id.";
+                            return $"{strExcepcion}^[]";
+                        }
+
+                        folio = ListaParametros[i];
+                        break;
+                    case 3:
+                        if (!int.TryParse(ListaParametros[i], out fotos) || fotos < 0)
+                        {
+                            strExcepcion = "Invalid company number.";
+                            return $"{strExcepcion}^[]";
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            var query = $@"
+                        DECLARE
+                        @FOTOS TINYINT,
+                        @REVISION BIT,
+                        @TIPO TINYINT;
+
+                        SELECT TOP(1) @TIPO = ISNULL(Tipo,99) FROM  Valsi_EmbCamion WHERE IdFolio = '{folio}';
+        
+                        IF (@TIPO = 0)
+                          BEGIN
+                            SELECT 'true' IsSuccess, '' Message;
+                          END
+                        ELSE IF (@TIPO = 1)
+                          BEGIN
+                            SELECT @FOTOS = COUNT(IdFoto) FROM  Valsi_EmbFotos WHERE IdFolio = '{folio}' AND Tipo = 'E';
+                            SELECT @REVISION = ISNULL(1, 0) FROM Valsi_EmbRevisionSeguridad WHERE IdFolio = '{folio}' AND EN_FechaCaptura IS NOT NULL;
+
+                            IF(@FOTOS >= {fotos})
+                              BEGIN
+                                IF(@REVISION = 1)
+                                  BEGIN
+                                    SELECT 'true' IsSuccess, '' Message;
+                                  END
+                                ELSE
+                                  BEGIN
+                                     SELECT 'false' IsSuccess, 'checkup' Message;
+                                  END
+                              END
+                            ELSE
+                              BEGIN
+                                SELECT 'false' IsSuccess, 'photos' Message;
+                              END
+                          END
+                        ELSE IF (@TIPO = 2)
+                          BEGIN
+                            SELECT @FOTOS = COUNT(IdFoto) FROM  Valsi_EmbFotos WHERE IdFolio = '{folio}' AND Tipo = 'E';
+
+                            IF(@FOTOS >= {fotos})
+                              BEGIN
+                                SELECT 'true' IsSuccess, '' Message;
+                              END
+                            ELSE
+                              BEGIN
+                                SELECT 'false' IsSuccess, 'photos' Message;
+                              END
+                          END
+                        ELSE IF (@TIPO = 3)
+                          BEGIN
+                            SELECT @FOTOS = COUNT(IdFoto) FROM  Valsi_EmbFotos WHERE IdFolio = '{folio}' AND Tipo = 'E';
+
+                            IF(@FOTOS >= {fotos})
+                              BEGIN
+                                SELECT 'true' IsSuccess, '' Message;
+                              END
+                            ELSE
+                              BEGIN
+                                SELECT 'false' IsSuccess, 'photos' Message;
+                              END
+                          END
+                        ELSE IF (@TIPO = 4)
+                          BEGIN
+                            SELECT @FOTOS = COUNT(IdFoto) FROM  Valsi_EmbFotos WHERE IdFolio = '{folio}' AND Tipo = 'E';
+                            SELECT @REVISION = ISNULL(1, 0) FROM Valsi_EmbRevisionSeguridad WHERE IdFolio = '{folio}' AND EN_FechaCaptura IS NOT NULL;
+
+                            IF(@FOTOS >= {fotos})
+                              BEGIN
+                                IF(@REVISION = 1)
+                                  BEGIN
+                                    SELECT 'true' IsSuccess, '' Message;
+                                  END
+                                ELSE
+                                  BEGIN
+                                     SELECT 'false' IsSuccess, 'checkup' Message;
+                                  END
+                              END
+                            ELSE
+                              BEGIN
+                                SELECT 'false' IsSuccess, 'photos' Message;
+                              END
+                          END
+                        ELSE IF (@TIPO = 5)
+                          BEGIN
+                            SELECT @FOTOS = COUNT(IdFoto) FROM  Valsi_EmbFotos WHERE IdFolio = '{folio}' AND Tipo = 'E';
+                            SELECT @REVISION = ISNULL(1, 0) FROM Valsi_EmbRevisionSeguridad WHERE IdFolio = '{folio}' AND EN_FechaCaptura IS NOT NULL;
+
+                            IF(@FOTOS >= {fotos})
+                              BEGIN
+                                IF(@REVISION = 1)
+                                  BEGIN
+                                    SELECT 'true' IsSuccess, '' Message;
+                                  END
+                                ELSE
+                                  BEGIN
+                                     SELECT 'false' IsSuccess, 'checkup' Message;
+                                  END
+                              END
+                            ELSE
+                              BEGIN
+                                SELECT 'false' IsSuccess, 'photos' Message;
+                              END
+                          END
+                        ELSE IF (@TIPO = 6)
+                          BEGIN
+                            SELECT @FOTOS = COUNT(IdFoto) FROM  Valsi_EmbFotos WHERE IdFolio = '{folio}' AND Tipo = 'E';
+                            SELECT @REVISION = ISNULL(1, 0) FROM Valsi_EmbRevisionSeguridad WHERE IdFolio = '{folio}' AND EN_FechaCaptura IS NOT NULL;
+
+                            IF(@FOTOS >= {fotos})
+                              BEGIN
+                                IF(@REVISION = 1)
+                                  BEGIN
+                                    SELECT 'true' IsSuccess, '' Message;
+                                  END
+                                ELSE
+                                  BEGIN
+                                     SELECT 'false' IsSuccess, 'checkup' Message;
+                                  END
+                              END
+                            ELSE
+                              BEGIN
+                                SELECT 'false' IsSuccess, 'photos' Message;
+                              END
+                          END";
+
+            Conex conex = ConsigueConexiones(ConexionBase, compania, pruebas, ref strExcepcion);
+
+            var dataTable = GetDataTable(query, conex.CIA_ERP[compania], ref strExcepcion);
+
+            return $"{strExcepcion}^{JsonConvert.SerializeObject(dataTable)}";
+        }
